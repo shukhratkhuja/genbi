@@ -115,10 +115,9 @@ Keep your response concise but informative (2-3 sentences max)."""
             query, 
             data
         )
-    
+        
     async def generate_chart_config(self, data: List[Dict[str, Any]], query: str) -> Dict[str, Any]:
-
-        """Generate Plotly chart configuration - defaults to bar chart"""
+        """Generate chart configuration with better detection"""
         if not data:
             return {}
         
@@ -126,85 +125,165 @@ Keep your response concise but informative (2-3 sentences max)."""
         serialized_data = serialize_for_json(data)
         columns = list(serialized_data[0].keys())
         
-        # Default bar chart configuration
-        chart_config = {
-            "data": [{
-                "x": [row[columns[0]] for row in serialized_data],
-                "y": [row[columns[1]] for row in serialized_data] if len(columns) > 1 else [1] * len(serialized_data),
-                "type": "bar",
-                "name": columns[1] if len(columns) > 1 else "Count",
-                "marker": {
-                    "color": "rgba(54, 162, 235, 0.8)",
-                    "line": {
-                        "color": "rgba(54, 162, 235, 1)",
-                        "width": 1
-                    }
-                }
-            }],
-            "layout": {
-                "title": {
-                    "text": "Query Results",
-                    "font": {"size": 18}
-                },
-                "xaxis": {
-                    "title": columns[0],
-                    "showgrid": True,
-                    "gridcolor": "rgba(128, 128, 128, 0.2)"
-                },
-                "yaxis": {
-                    "title": columns[1] if len(columns) > 1 else "Count",
-                    "showgrid": True,
-                    "gridcolor": "rgba(128, 128, 128, 0.2)"
-                },
-                "plot_bgcolor": "white",
-                "paper_bgcolor": "white",
-                "margin": {"l": 60, "r": 40, "t": 80, "b": 60},
-                "hovermode": "x unified"
-            }
-        }
+        print(f"Generating chart for {len(serialized_data)} records with columns: {columns}")
         
-        # Special handling only for specific cases
+        # Analyze data to determine best chart type
+        chart_type = "bar"  # default
+        
         if len(columns) >= 2:
             first_col_values = [row[columns[0]] for row in serialized_data]
             second_col_values = [row[columns[1]] for row in serialized_data]
             
-            # ONLY pie chart for very small categorical data
-            if (len(serialized_data) <= 5 and 
-                all(isinstance(val, (int, float)) for val in second_col_values) and
+            # Check if second column is numeric
+            is_numeric = all(isinstance(val, (int, float)) or (isinstance(val, str) and val.replace('.', '').replace('-', '').isdigit()) for val in second_col_values)
+            
+            print(f"Second column numeric: {is_numeric}")
+            print(f"Data length: {len(serialized_data)}")
+            print(f"First column sample: {first_col_values[:3]}")
+            print(f"Second column sample: {second_col_values[:3]}")
+            
+            # Convert numeric strings to numbers
+            if is_numeric:
+                second_col_values = [float(val) if isinstance(val, str) else val for val in second_col_values]
+            
+            # Determine chart type based on data characteristics
+            if (len(serialized_data) <= 8 and 
+                is_numeric and 
                 all(val >= 0 for val in second_col_values) and
-                not any(keyword in columns[0].lower() for keyword in ['date', 'time', 'month', 'year'])):
-                chart_config = {
+                not any(keyword in columns[0].lower() for keyword in ['date', 'time', 'month', 'year', 'day'])):
+                chart_type = "pie"
+            elif any(keyword in columns[0].lower() for keyword in ['date', 'time', 'month', 'year']):
+                chart_type = "line"
+            else:
+                chart_type = "bar"
+        
+        print(f"Selected chart type: {chart_type}")
+        
+        # Generate configuration based on chart type
+        if chart_type == "pie":
+            config = {
+                "data": [{
+                    "labels": [str(row[columns[0]]) for row in serialized_data],
+                    "values": [float(row[columns[1]]) if isinstance(row[columns[1]], (str, int, float)) else 0 for row in serialized_data],
+                    "type": "pie",
+                    "hole": 0.3,
+                    "textinfo": "label+percent",
+                    "textposition": "outside"
+                }],
+                "layout": {
+                    "title": {
+                        "text": f"{columns[1]} by {columns[0]}",
+                        "font": {"size": 16}
+                    },
+                    "margin": {"l": 60, "r": 60, "t": 80, "b": 60},
+                    "showlegend": True
+                }
+            }
+        
+        elif chart_type == "line":
+            config = {
+                "data": [{
+                    "x": [str(row[columns[0]]) for row in serialized_data],
+                    "y": [float(row[columns[1]]) if isinstance(row[columns[1]], (str, int, float)) else 0 for row in serialized_data],
+                    "type": "scatter",
+                    "mode": "lines+markers",
+                    "name": columns[1],
+                    "line": {"color": "rgb(54, 162, 235)", "width": 3},
+                    "marker": {"color": "rgb(54, 162, 235)", "size": 6}
+                }],
+                "layout": {
+                    "title": {
+                        "text": f"{columns[1]} over {columns[0]}",
+                        "font": {"size": 16}
+                    },
+                    "xaxis": {
+                        "title": columns[0],
+                        "showgrid": True,
+                        "gridcolor": "rgba(128, 128, 128, 0.2)"
+                    },
+                    "yaxis": {
+                        "title": columns[1],
+                        "showgrid": True,
+                        "gridcolor": "rgba(128, 128, 128, 0.2)"
+                    },
+                    "plot_bgcolor": "white",
+                    "paper_bgcolor": "white",
+                    "margin": {"l": 60, "r": 40, "t": 80, "b": 60}
+                }
+            }
+        
+        else:  # bar chart
+            # Check if we need horizontal bars (long labels or many items)
+            first_col_values = [str(row[columns[0]]) for row in serialized_data]
+            use_horizontal = (any(len(label) > 12 for label in first_col_values) or 
+                            len(serialized_data) > 15)
+            
+            if use_horizontal:
+                config = {
                     "data": [{
-                        "labels": first_col_values,
-                        "values": second_col_values,
-                        "type": "pie",
-                        "hole": 0.3,
-                        "textinfo": "label+percent",
-                        "textposition": "outside"
+                        "x": [float(row[columns[1]]) if isinstance(row[columns[1]], (str, int, float)) else 0 for row in serialized_data],
+                        "y": first_col_values,
+                        "type": "bar",
+                        "orientation": "h",
+                        "name": columns[1],
+                        "marker": {
+                            "color": "rgba(54, 162, 235, 0.8)",
+                            "line": {"color": "rgba(54, 162, 235, 1)", "width": 1}
+                        }
                     }],
                     "layout": {
                         "title": {
-                            "text": "Distribution",
-                            "font": {"size": 18}
+                            "text": f"{columns[1]} by {columns[0]}",
+                            "font": {"size": 16}
                         },
-                        "margin": {"l": 60, "r": 60, "t": 80, "b": 60}
+                        "xaxis": {
+                            "title": columns[1],
+                            "showgrid": True,
+                            "gridcolor": "rgba(128, 128, 128, 0.2)"
+                        },
+                        "yaxis": {
+                            "title": columns[0],
+                            "showgrid": True,
+                            "gridcolor": "rgba(128, 128, 128, 0.2)"
+                        },
+                        "plot_bgcolor": "white",
+                        "paper_bgcolor": "white",
+                        "margin": {"l": 120, "r": 40, "t": 80, "b": 60},
+                        "height": max(400, len(serialized_data) * 30)
                     }
                 }
-            
-            # For long labels, use horizontal bar chart
-            elif any(len(str(val)) > 15 for val in first_col_values) or len(serialized_data) > 20:
-                chart_config["data"][0].update({
-                    "orientation": "h",
-                    "x": second_col_values,
-                    "y": first_col_values
-                })
-                # Swap axis titles for horizontal orientation
-                chart_config["layout"]["xaxis"]["title"] = columns[1] if len(columns) > 1 else "Count"
-                chart_config["layout"]["yaxis"]["title"] = columns[0]
-                chart_config["layout"]["height"] = max(400, len(serialized_data) * 25)
+            else:
+                config = {
+                    "data": [{
+                        "x": first_col_values,
+                        "y": [float(row[columns[1]]) if isinstance(row[columns[1]], (str, int, float)) else 0 for row in serialized_data],
+                        "type": "bar",
+                        "name": columns[1],
+                        "marker": {
+                            "color": "rgba(54, 162, 235, 0.8)",
+                            "line": {"color": "rgba(54, 162, 235, 1)", "width": 1}
+                        }
+                    }],
+                    "layout": {
+                        "title": {
+                            "text": f"{columns[1]} by {columns[0]}",
+                            "font": {"size": 16}
+                        },
+                        "xaxis": {
+                            "title": columns[0],
+                            "showgrid": True,
+                            "gridcolor": "rgba(128, 128, 128, 0.2)"
+                        },
+                        "yaxis": {
+                            "title": columns[1],
+                            "showgrid": True,
+                            "gridcolor": "rgba(128, 128, 128, 0.2)"
+                        },
+                        "plot_bgcolor": "white",
+                        "paper_bgcolor": "white",
+                        "margin": {"l": 60, "r": 40, "t": 80, "b": 60}
+                    }
+                }
         
-        # Always keep as bar chart - remove the time series detection
-        return chart_config
-
-
-
+        print(f"Generated config: {config}")
+        return config
