@@ -28,7 +28,7 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    container_name: genbi-backend
+    container_name: backend
     environment:
       DATABASE_URL: postgresql+asyncpg://genbi_user:genbi_password@db:5432/genbi_db
       SECRET_KEY: your-super-secret-key-change-in-production-12345
