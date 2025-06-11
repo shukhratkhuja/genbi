@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+venv
+.venv
+ENV
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+
+# Development files
+.env.local
+.env.development
+
+# Test files
+htmlcov/
+.coverage
+.pytest_cache
+
+# Documentation
+docs/_build/
+
+# Node modules (if any)
+node_modules/
