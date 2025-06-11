@@ -1,3 +1,4 @@
+# backend/Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -6,15 +7,17 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Copy requirements from root directory
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY app/ ./app/
-COPY alembic/ ./alembic/
+# Copy application code from backend directory
+COPY backend/app/ ./app/
+COPY backend/alembic/ ./alembic/
+COPY backend/scripts/ ./scripts/
 COPY alembic.ini .
 
 # Create non-root user

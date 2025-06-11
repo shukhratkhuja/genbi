@@ -1,10 +1,10 @@
-import api from './api';
+import api from './api.js';
 
 export const authService = {
-  async login(credentials) {
+  async login(username, password) {
     const formData = new FormData();
-    formData.append('username', credentials.username);
-    formData.append('password', credentials.password);
+    formData.append('username', username);
+    formData.append('password', password);
     
     const response = await api.post('/api/auth/login', formData, {
       headers: {
@@ -12,18 +12,17 @@ export const authService = {
       },
     });
     
-    if (response.data.access_token) {
-      localStorage.setItem('access_token', response.data.access_token);
-      // Get user profile
-      const userResponse = await api.get('/api/auth/me');
-      localStorage.setItem('user', JSON.stringify(userResponse.data));
-    }
-    
+    const { access_token } = response.data;
+    localStorage.setItem('token', access_token);
     return response.data;
   },
 
-  async register(userData) {
-    const response = await api.post('/api/auth/register', userData);
+  async register(username, email, password) {
+    const response = await api.post('/api/auth/register', {
+      username,
+      email,
+      password,
+    });
     return response.data;
   },
 
@@ -33,20 +32,10 @@ export const authService = {
   },
 
   logout() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-  },
-
-  getToken() {
-    return localStorage.getItem('access_token');
+    localStorage.removeItem('token');
   },
 
   isAuthenticated() {
-    return !!this.getToken();
+    return !!localStorage.getItem('token');
   },
-
-  getUser() {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  }
 };

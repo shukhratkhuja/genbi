@@ -1,80 +1,90 @@
-import { useCallback } from 'react';
-import { databaseService } from '../services/database';
-import { useApp } from '../contexts/AppContext';
-import { useApi } from './useApi';
+import { useState, useEffect } from 'react';
+import { databaseService } from '../services/database.js';
+import toast from 'react-hot-toast';
 
-export function useDatabase() {
-  const { connections, currentConnection, dispatch } = useApp();
-  const { executeRequest } = useApi();
+export const useDatabase = () => {
+  const [connections, setConnections] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const loadConnections = useCallback(async () => {
-    await executeRequest(
-      () => databaseService.getConnections(),
-      {
-        onSuccess: (connections) => {
-          dispatch({ type: 'SET_CONNECTIONS', payload: connections });
-          if (connections.length > 0 && !currentConnection) {
-            dispatch({ type: 'SET_CURRENT_CONNECTION', payload: connections[0] });
-          }
-        }
-      }
-    );
-  }, [executeRequest, dispatch, currentConnection]);
+  const fetchConnections = async () => {
+    try {
+      setLoading(true);
+      const data = await databaseService.getConnections();
+      setConnections(data);
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to fetch connections');
+      toast.error('Failed to fetch connections');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const createConnection = useCallback(async (connectionData) => {
-    const newConnection = await executeRequest(
-      () => databaseService.createConnection(connectionData),
-      {
-        onSuccess: (connection) => {
-          dispatch({ type: 'ADD_CONNECTION', payload: connection });
-          dispatch({ type: 'SET_CURRENT_CONNECTION', payload: connection });
-        }
-      }
-    );
-    return newConnection;
-  }, [executeRequest, dispatch]);
+  const createConnection = async (connectionData) => {
+    try {
+      setLoading(true);
+      const newConnection = await databaseService.createConnection(connectionData);
+      setConnections(prev => [...prev, newConnection]);
+      toast.success('Database connection created successfully!');
+      return { success: true, data: newConnection };
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || 'Failed to create connection';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return { success: false, error: errorMsg };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const updateConnection = useCallback(async (connectionId, connectionData) => {
-    const updatedConnection = await executeRequest(
-      () => databaseService.updateConnection(connectionId, connectionData),
-      {
-        onSuccess: (connection) => {
-          dispatch({ type: 'UPDATE_CONNECTION', payload: connection });
-          if (currentConnection?.id === connectionId) {
-            dispatch({ type: 'SET_CURRENT_CONNECTION', payload: connection });
-          }
-        }
-      }
-    );
-    return updatedConnection;
-  }, [executeRequest, dispatch, currentConnection]);
+  const updateConnection = async (id, connectionData) => {
+    try {
+      setLoading(true);
+      const updatedConnection = await databaseService.updateConnection(id, connectionData);
+      setConnections(prev => 
+        prev.map(conn => conn.id === id ? updatedConnection : conn)
+      );
+      toast.success('Connection updated successfully!');
+      return { success: true, data: updatedConnection };
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || 'Failed to update connection';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return { success: false, error: errorMsg };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const deleteConnection = useCallback(async (connectionId) => {
-    await executeRequest(
-      () => databaseService.deleteConnection(connectionId),
-      {
-        onSuccess: () => {
-          dispatch({ type: 'REMOVE_CONNECTION', payload: connectionId });
-        }
-      }
-    );
-  }, [executeRequest, dispatch]);
+  const deleteConnection = async (id) => {
+    try {
+      setLoading(true);
+      await databaseService.deleteConnection(id);
+      setConnections(prev => prev.filter(conn => conn.id !== id));
+      toast.success('Connection deleted successfully!');
+      return { success: true };
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || 'Failed to delete connection';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return { success: false, error: errorMsg };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const testConnection = useCallback(async (connectionData) => {
-    // This would be handled by the create/update connection endpoints
-    // which automatically test the connection
-    return await executeRequest(() => databaseService.createConnection(connectionData));
-  }, [executeRequest]);
+  useEffect(() => {
+    fetchConnections();
+  }, []);
 
   return {
     connections,
-    currentConnection,
-    loadConnections,
+    loading,
+    error,
+    fetchConnections,
     createConnection,
     updateConnection,
     deleteConnection,
-    testConnection,
-    hasConnection: connections.length > 0,
-    canAddConnection: connections.length === 0, // Max 1 connection per user
   };
-}
+};

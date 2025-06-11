@@ -1,22 +1,47 @@
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+export const API_ENDPOINTS = {
+  AUTH: {
+    LOGIN: '/api/auth/login',
+    REGISTER: '/api/auth/register',
+    ME: '/api/auth/me',
+  },
+  CONNECTIONS: {
+    LIST: '/api/connections/',
+    CREATE: '/api/connections/',
+    DETAIL: (id) => `/api/connections/${id}`,
+    UPDATE: (id) => `/api/connections/${id}`,
+    DELETE: (id) => `/api/connections/${id}`,
+    TABLES: (id) => `/api/connections/${id}/tables`,
+    SELECT_TABLES: (id) => `/api/connections/${id}/tables`,
+    SELECTED_TABLES: (id) => `/api/connections/${id}/selected-tables`,
+  },
+  QUERIES: {
+    EXECUTE: '/api/queries/',
+    HISTORY: '/api/queries/',
+    STATS: '/api/queries/stats',
+  },
+  TABLES: {
+    MODELS: (connectionId) => `/api/tables/${connectionId}/models`,
+    RELATIONSHIPS: '/api/tables/relationships',
+    CALCULATED_FIELDS: '/api/tables/calculated-fields',
+  },
+};
 
-export const DB_TYPES = [
-  { value: 'postgresql', label: 'PostgreSQL', icon: '🐘', defaultPort: 5432 },
-  { value: 'mysql', label: 'MySQL', icon: '🐬', defaultPort: 3306 },
-  { value: 'sqlite', label: 'SQLite', icon: '📁', defaultPort: null },
+export const DATABASE_TYPES = [
+  { value: 'postgresql', label: 'PostgreSQL' },
+  { value: 'mysql', label: 'MySQL' },
+  { value: 'sqlite', label: 'SQLite' },
 ];
 
-export const THEME_OPTIONS = {
-  LIGHT: 'light',
-  DARK: 'dark',
+export const CHART_TYPES = {
+  BAR: 'bar',
+  LINE: 'line',
+  PIE: 'pie',
+  SCATTER: 'scatter',
+  AREA: 'area',
 };
 
-export const LANGUAGES = {
-  EN: 'en',
-  RU: 'ru',
-  UZ: 'uz',
+export const QUERY_STATUS = {
+  PENDING: 'pending',
+  SUCCESS: 'success',
+  ERROR: 'error',
 };
-
-export const MAX_CONNECTIONS_PER_USER = 1;
-export const MAX_QUERY_HISTORY = 100;
-export const DEFAULT_QUERY_LIMIT = 50;
