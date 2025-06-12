@@ -64,6 +64,24 @@ const DashboardPage = () => {
 
   const recentQueries = queryHistory.slice(0, 5);
 
+  // **YANGI**: Status uchun tarjimalar
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'connected':
+        return t.statusConnected || 'Connected';
+      case 'failed':
+        return t.statusFailed || 'Failed';
+      case 'pending':
+        return t.statusPending || 'Pending';
+      default:
+        return t.statusUnknown || 'Unknown';
+    }
+  };
+
+  const getSuccessStatusText = (isSuccessful) => {
+    return isSuccessful ? (t.statusSuccess || 'Success') : (t.statusFailed || 'Failed');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -73,7 +91,7 @@ const DashboardPage = () => {
             {t.dashboard}
           </h1>
           <p className={`mt-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Overview of your data analytics activity
+            {t.dashboardOverview || 'Overview of your data analytics activity'}
           </p>
         </div>
 
@@ -99,7 +117,7 @@ const DashboardPage = () => {
                       {stat.change}
                     </span>
                     <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} ml-1`}>
-                      vs last month
+                      {t.vsLastMonth || 'vs last month'}
                     </span>
                   </div>
                 </div>
@@ -122,7 +140,7 @@ const DashboardPage = () => {
                 href="/queries"
                 className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
               >
-                View all
+                {t.viewAll || 'View all'}
               </a>
             </div>
             
@@ -144,7 +162,7 @@ const DashboardPage = () => {
                       <span className={`${
                         query.is_successful ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {query.is_successful ? 'Success' : 'Failed'}
+                        {getSuccessStatusText(query.is_successful)}
                       </span>
                     </div>
                   </div>
@@ -153,7 +171,7 @@ const DashboardPage = () => {
                 <div className="text-center py-6">
                   <Activity className={`mx-auto w-8 h-8 ${isDark ? 'text-gray-600' : 'text-gray-400'} mb-2`} />
                   <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    No queries executed yet
+                    {t.noQueriesExecuted || 'No queries executed yet'}
                   </p>
                 </div>
               )}
@@ -164,13 +182,13 @@ const DashboardPage = () => {
           <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg p-6 border shadow-sm`}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Database Connections
+                {t.databaseConnections || 'Database Connections'}
               </h3>
               <a
                 href="/databases"
                 className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
               >
-                Manage
+                {t.manage || 'Manage'}
               </a>
             </div>
             
@@ -190,13 +208,18 @@ const DashboardPage = () => {
                           {connection.db_type} • {connection.host}
                         </p>
                       </div>
-                      <div className={`w-2 h-2 rounded-full ${
-                        connection.connection_status === 'connected' 
-                          ? 'bg-green-500' 
-                          : connection.connection_status === 'failed'
-                          ? 'bg-red-500'
-                          : 'bg-yellow-500'
-                      }`}></div>
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          connection.connection_status === 'connected' 
+                            ? 'bg-green-500' 
+                            : connection.connection_status === 'failed'
+                            ? 'bg-red-500'
+                            : 'bg-yellow-500'
+                        }`}></div>
+                        <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {getStatusText(connection.connection_status)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -204,14 +227,14 @@ const DashboardPage = () => {
                 <div className="text-center py-6">
                   <Database className={`mx-auto w-8 h-8 ${isDark ? 'text-gray-600' : 'text-gray-400'} mb-2`} />
                   <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>
-                    No databases connected
+                    {t.noDatabasesConnected || 'No databases connected'}
                   </p>
                   <a
                     href="/databases"
                     className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Database className="w-3 h-3" />
-                    <span>Connect Database</span>
+                    <span>{t.connectDatabase || 'Connect Database'}</span>
                   </a>
                 </div>
               )}
@@ -222,7 +245,7 @@ const DashboardPage = () => {
         {/* Quick Actions */}
         <div className={`mt-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg p-6 border shadow-sm`}>
           <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
-            Quick Actions
+            {t.quickActions || 'Quick Actions'}
           </h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -236,10 +259,10 @@ const DashboardPage = () => {
             >
               <BarChart3 className="w-8 h-8 text-blue-500 mb-2" />
               <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'} mb-1`}>
-                New Query
+                {t.newQuery || 'New Query'}
               </h4>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Ask questions about your data
+                {t.askQuestionsAboutData || 'Ask questions about your data'}
               </p>
             </a>
             
@@ -253,10 +276,10 @@ const DashboardPage = () => {
             >
               <Database className="w-8 h-8 text-green-500 mb-2" />
               <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'} mb-1`}>
-                Connect Database
+                {t.connectDatabase || 'Connect Database'}
               </h4>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Add new data sources
+                {t.addNewDataSources || 'Add new data sources'}
               </p>
             </a>
             
@@ -270,10 +293,10 @@ const DashboardPage = () => {
             >
               <Clock className="w-8 h-8 text-purple-500 mb-2" />
               <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'} mb-1`}>
-                View History
+                {t.viewHistory || 'View History'}
               </h4>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Browse past queries
+                {t.browsePastQueries || 'Browse past queries'}
               </p>
             </a>
           </div>

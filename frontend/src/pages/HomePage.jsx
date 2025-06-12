@@ -10,26 +10,27 @@ const HomePage = () => {
   const { isDark } = useTheme();
   const { t } = useLanguage();
 
+  // **YANGILANDI**: Features uchun tarjimalar t objectidan olinadi
   const features = [
     {
       icon: Database,
-      title: 'Connect Any Database',
-      description: 'Connect to PostgreSQL, MySQL, SQLite and more with simple configuration',
+      title: t.connectAnyDatabase || 'Connect Any Database',
+      description: t.connectAnyDatabaseDesc || 'Connect to PostgreSQL, MySQL, SQLite and more with simple configuration',
     },
     {
       icon: Brain,
-      title: 'AI-Powered Insights',
-      description: 'Get intelligent insights and recommendations from your data automatically',
+      title: t.aiPoweredInsights || 'AI-Powered Insights',
+      description: t.aiPoweredInsightsDesc || 'Get intelligent insights and recommendations from your data automatically',
     },
     {
       icon: BarChart3,
-      title: 'Auto Visualizations',
-      description: 'Generate beautiful charts and graphs from your query results instantly',
+      title: t.autoVisualizations || 'Auto Visualizations',
+      description: t.autoVisualizationsDesc || 'Generate beautiful charts and graphs from your query results instantly',
     },
     {
       icon: Zap,
-      title: 'Natural Language',
-      description: 'Ask questions in plain English and get SQL queries generated automatically',
+      title: t.naturalLanguage || 'Natural Language',
+      description: t.naturalLanguageDesc || 'Ask questions in plain English and get SQL queries generated automatically',
     },
   ];
 
@@ -43,7 +44,7 @@ const HomePage = () => {
               {t.subtitle}
             </h1>
             <p className={`text-xl ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-8 max-w-3xl mx-auto`}>
-              Transform your data into insights with AI-powered natural language queries, automatic visualizations, and intelligent analytics.
+              {t.heroDescription || 'Transform your data into insights with AI-powered natural language queries, automatic visualizations, and intelligent analytics.'}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -52,7 +53,7 @@ const HomePage = () => {
                   to="/dashboard"
                   className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
                 >
-                  Go to Dashboard
+                  {t.goToDashboard || 'Go to Dashboard'}
                 </Link>
               ) : (
                 <>
@@ -60,7 +61,7 @@ const HomePage = () => {
                     to="/register"
                     className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
                   >
-                    Get Started
+                    {t.getStarted || 'Get Started'}
                   </Link>
                   <Link
                     to="/login"
@@ -84,10 +85,10 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
-              Powerful Features
+              {t.powerfulFeatures || 'Powerful Features'}
             </h2>
             <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Everything you need to analyze your data efficiently
+              {t.powerfulFeaturesDesc || 'Everything you need to analyze your data efficiently'}
             </p>
           </div>
 
@@ -117,16 +118,16 @@ const HomePage = () => {
         <div className={`${isDark ? 'bg-gray-800' : 'bg-blue-50'} py-16`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
-              Ready to get started?
+              {t.readyToStart || 'Ready to get started?'}
             </h2>
             <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-8`}>
-              Join thousands of users who are already transforming their data analysis
+              {t.readyToStartDesc || 'Join thousands of users who are already transforming their data analysis'}
             </p>
             <Link
               to="/register"
               className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
             >
-              Start Free Trial
+              {t.startFreeTrial || 'Start Free Trial'}
             </Link>
           </div>
         </div>
