@@ -3,7 +3,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://genbi_user:genbi_password@db:5432/genbi_db"
+    DATABASE_URL: str
     
     # JWT
     SECRET_KEY: str = "openai-api-key"
